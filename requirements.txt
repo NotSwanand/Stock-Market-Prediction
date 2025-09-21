@@ -1,0 +1,10 @@
+Flask
+pandas
+numpy
+matplotlib
+statsmodels
+scikit-learn
+tensorflow
+joblib
+requests
+python-dotenv

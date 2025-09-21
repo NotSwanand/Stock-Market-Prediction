@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stock Prediction Dashboard | {{ quote }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='styles/results.css') }}" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="container-fluid py-5 px-5">
+
+
+  <!-- Title -->
+  <div class="d-flex justify-content-between align-items-center mb-5">
+    <div>
+      <h2 class="fw-bold">Stock Prediction Dashboard</h2>
+      <p class="text-muted">AI-powered analysis for <span class="text-primary">{{ quote }}</span></p>
+    </div>
+    <a href="{{ url_for('index') }}" class="btn btn-light border btn-lg">
+  Predict Another Stock
+</a>
+
+  </div>
+
+  <!-- Prediction Cards -->
+  <div class="row g-4 mb-5">
+    <div class="col-md-3">
+  <div class="model-card arima">
+    <span>📊 ARIMA</span>
+    <h3>${{ arima_pred }}</h3>
+    <p class="rmse">RMSE: {{ error_arima }}</p>
+  </div>
+</div>
+    <div class="col-md-3">
+      <div class="model-card lstm">
+        <span>🧠 LSTM</span>
+        <h3>${{ lstm_pred }}</h3>
+        <p class="rmse">RMSE: {{ error_lstm }}</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="model-card lr">
+        <span>📈 Linear Regression</span>
+        <h3>${{ lr_pred }}</h3>
+        <p class="rmse">RMSE: {{ error_lr }}</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="model-card xgb">
+        <span>🚀 XGBoost</span>
+        <h3>${{ xgb_pred | round(2) if xgb_pred is defined else "N/A" }}</h3>
+        <p class="rmse">RMSE: {{ error_xgb }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Investment Recommendation -->
+  {% if idea and decision %}
+  <div class="rec-card text-center mb-5">
+    <h4>Investment Recommendation</h4>
+    <div class="mt-3">
+      {% if decision == 'BUY' %}
+        <span class="badge badge-buy">BUY</span>
+      {% else %}
+        <span class="badge badge-sell">SELL</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Stock Snapshot -->
+  <div class="stock-card mb-5">
+    <h5>Stock Overview</h5>
+    <div class="row text-center mt-3">
+      <div class="col"><strong>Current:</strong><br>${{ current_price }}</div>
+      <div class="col"><strong>Open:</strong><br>${{ open_s }}</div>
+      <div class="col"><strong>Close:</strong><br>${{ close_s }}</div>
+      <div class="col"><strong>High:</strong><br>${{ high_s }}</div>
+      <div class="col"><strong>Low:</strong><br>${{ low_s }}</div>
+      <div class="col"><strong>Volume:</strong><br>{{ vol }}</div>
+    </div>
+  </div>
+
+  <!-- Forecast Table -->
+  {% if forecast_set and xgb_forecast and forecast_set_lstm %}
+  <div class="forecast-card mb-5">
+    <h5 class="mb-4">7-Day Forecast Comparison</h5>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle text-center">
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Linear Regression</th>
+            <th>XGBoost</th>
+            <th>LSTM</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for i in range(0, 7) %}
+          <tr>
+            <td>Day {{ i + 1 }}</td>
+            <td class="lr">{{ forecast_set[i] | round(2) }}</td>
+            <td class="xgb">{{ xgb_forecast[i] | round(2) }}</td>
+            <td class="lstm">{{ forecast_set_lstm[i] | round(2) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Graphs -->
+  <div class="mb-5">
+    <h5 class="mb-4">Model Performance Comparison</h5>
+    <div class="row g-4">
+  <div class="col-md-6 col-lg-6">
+    <div class="graph-card">
+      <img src="{{ url_for('static', filename='ARIMA.png') }}" alt="ARIMA">
+      <p>ARIMA Model</p>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-6">
+    <div class="graph-card">
+      <img src="{{ url_for('static', filename='LSTM.png') }}" alt="LSTM">
+      <p>LSTM Model</p>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-6">
+    <div class="graph-card">
+      <img src="{{ url_for('static', filename='LR.png') }}" alt="LR">
+      <p>Linear Regression</p>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-6">
+    <div class="graph-card">
+      <img src="{{ url_for('static', filename='XGB.png') }}" alt="XGB">
+      <p>XGBoost</p>
+    </div>
+  </div>
+</div>
+
+  </div>
+
+</div>
+</body>
+</html>

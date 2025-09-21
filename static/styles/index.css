@@ -1,0 +1,167 @@
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Inter", sans-serif;
+}
+
+body {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    #0f172a 0%,   /* deep navy top-left */
+    #1e3a8a 35%,  /* blue */
+    #4338ca 70%,  /* indigo */
+    #312e81 100%  /* purplish bottom-right */
+  );
+  overflow: hidden;
+  color: white;
+}
+
+
+/* Floating emoji animations */
+/* Floating emoji animations */
+.background .emoji {
+  position: absolute;
+  font-size: 2rem;
+  opacity: 0;
+  animation: float 15s infinite ease-in-out;
+}
+
+@keyframes float {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+  15%  { opacity: 0.4; }     /* fade in */
+  50%  { opacity: 0.4; }     /* stay visible */
+  85%  { opacity: 0.4; }     /* still visible */
+  100% { transform: translateY(-300px) rotate(360deg); opacity: 0; } /* fade out */
+}
+
+
+
+/* Card */
+.card {
+  background: rgba(25, 25, 25, 0.1);
+  backdrop-filter: blur(15px);
+  border-radius: 16px;
+  padding: 5rem 6rem;
+  text-align: center;
+  max-width: 800px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.card h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.card p {
+  font-size: 1.25rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.85;
+}
+
+/* Form */
+.card form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card input {
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  font-size: 1.75rem;
+}
+
+
+/* When browser autofills (previous values) */
+input:-webkit-autofill {
+  font-size: 1.75rem !important;
+  -webkit-text-fill-color: #000; /* match your input text color */
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* For Firefox */
+input:autofill {
+  font-size: 1.75rem !important;
+}
+
+
+.card button {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 1.75rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.card button:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+/* Popular symbols */
+.popular {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.popular span {
+  margin: 0 0.3rem;
+  padding: 0.2rem 0.6rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.popular span:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+#loader {
+  position: fixed;
+  inset: 0; /* shorthand for top:0; left:0; right:0; bottom:0 */
+  background: rgba(15, 23, 42, 0.95);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loader-box {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
+  padding: 2rem 3rem;
+  border-radius: 12px;
+  text-align: center;
+  color: white;
+  font-size: 1.25rem;
+}
+
+.spinner {
+  border: 4px solid rgba(255,255,255,0.2);
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 1rem auto;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

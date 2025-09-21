@@ -1,0 +1,65 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stonks Predictor</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}">
+</head>
+<body>
+  <div id="loader" style="display:none;">
+    <div class="loader-box">
+      <div class="spinner"></div>
+      <p>Generating Predictions...</p>
+    </div>
+  </div>
+  <div class="background"></div> <!-- empty, JS will fill emojis -->
+
+  <div class="card">
+    <h1>STONKS PREDICTOR</h1>
+    <p>AI-powered forecasts with <b>LSTM, ARIMA, XGBoost & Linear Regression</b></p>
+
+    <form action="{{ url_for('insertintotable') }}" method="POST">
+      <input type="text" name="nm" placeholder="Enter Stock Symbol (AAPL, TSLA, INFY...)" required />
+      <button type="submit">Let’s Predict 🚀</button>
+    </form>
+
+    <div class="popular">
+      Popular symbols:
+      <span>AAPL</span>
+      <span>GOOGL</span>
+      <span>TSLA</span>
+      <span>GME</span>
+      <span>AMC</span>
+    </div>
+  </div>
+
+  <script>
+  const emojis = ["🚀","📈","📉","💸","💎","🙌","🐂","🐻","🔥","🌕","✨","🤑","📊"];
+  const bg = document.querySelector(".background");
+
+  const emojiCount = 25;
+
+  for (let i = 0; i < emojiCount; i++) {
+    const span = document.createElement("span");
+    span.className = "emoji";
+    span.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+    span.style.top = Math.random() * 100 + "%";
+    span.style.left = Math.random() * 100 + "%";
+    span.style.animationDelay = "0s"; // 👈 ensures all appear instantly
+    span.style.animationDuration = (10 + Math.random() * 10) + "s"; // 👈 float speeds vary
+    bg.appendChild(span);
+  }
+</script>
+<script>
+  const form = document.querySelector("form");
+  const loader = document.getElementById("loader");
+
+  form.addEventListener("submit", function() {
+    loader.style.display = "flex"; // show loader
+  });
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,127 @@
+body {
+  background: #f8fafc;
+  font-size: 1.5rem; 
+  font-family: "Inter", sans-serif;
+  color: #111;
+}
+h2 {
+  font-size: 2.5rem;   /* dashboard title */
+}
+
+h3 {
+  font-size: 2rem;     /* prediction card values */
+}
+
+h4, h5 {
+  font-size: 1.5rem;   /* section titles */
+}
+.model-card h3 {
+  font-size: 2.2rem;
+}
+.model-card .rmse {
+  font-size: 1.1rem;
+}
+.table td, .table th {
+  font-size: 1.2rem;
+}
+.graph-card p {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+
+/* Prediction cards */
+.model-card {
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  text-align: center;
+}
+.model-card h3 {
+  font-weight: 700;
+  margin: 1rem 0;
+}
+.model-card .rmse {
+  font-size: 1.2rem;
+  color: #6b7280;
+}
+.model-card.arima { border-top: 4px solid #3b82f6; }
+.model-card.lstm  { border-top: 4px solid #10b981; }
+.model-card.lr    { border-top: 4px solid #8b5cf6; }
+.model-card.xgb   { border-top: 4px solid #f59e0b; }
+
+/* Recommendation */
+.rec-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.badge-buy {
+  background: #10b981;
+  color: #fff;
+  font-size: 1.5rem;
+  padding: 1rem 1.75rem;
+  border-radius: 8px;
+}
+.badge-sell {
+  background: #ef4444;
+  color: #fff;
+  font-size: 1.5rem;
+  padding: 1rem 1.75rem;
+  border-radius: 8px;
+}
+
+/* Stock card */
+.stock-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.stock-card h5 {
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* Forecast table */
+.forecast-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.table thead th {
+  background: #f9fafb;
+  font-weight: 600;
+}
+.table td.lr { color: #8b5cf6; font-weight: 900; }
+.table td.xgb { color: #f59e0b; font-weight: 900; }
+.table td.lstm { color: #10b981; font-weight: 900; }
+
+/* Graph card */
+.graph-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* Make images larger */
+.graph-card img {
+  width: 100%;          /* full width of card */
+  height: 380px;        /* slightly taller */
+  object-fit: contain;  /* keep proportions */
+  border-radius: 8px;
+}
+
+/* Caption below graph */
+.graph-card p {
+  margin-top: 0.75rem;
+  font-size: 1.1rem;    /* larger text */
+  font-weight: 500;     /* make it stand out */
+  color: #111827;       /* darker gray/black */
+}
+
