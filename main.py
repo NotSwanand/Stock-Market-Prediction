@@ -204,7 +204,7 @@ def ARIMA_ALGO(df):
     predictions = []
     for t in range(len(test)):
         model = ARIMA(history, order=(6, 1, 0))
-        model_fit = model.fit()
+        model_fit = model.fit(method_kwargs={"maxiter": 20})
         yhat = model_fit.forecast()[0]
         predictions.append(yhat)
         history.append(test[t])

@@ -17,21 +17,21 @@
 
   <div class="card">
     <h1>STONKS PREDICTOR</h1>
-    <p>ML-powered forecasts with <b>LSTM, ARIMA, XGBoost & Linear Regression</b></p>
+    <p>ML-powered stock forecasts with <b>LSTM, ARIMA, XGBoost & Linear Regression</b></p>
 
     <form action="{{ url_for('insertintotable') }}" method="POST">
-      <input type="text" name="nm" placeholder="Enter Stock Symbol (AAPL, TSLA, INFY...)" required />
-      <button type="submit">Let’s Predict 🚀</button>
-    </form>
+  <input type="text" id="stock-input" name="nm" placeholder="Enter Stock Symbol (AAPL, TSLA, INFY...)" required />
+  <button type="submit">Let’s Predict 🚀</button>
+</form>
 
-    <div class="popular">
-      Popular symbols:
-      <span>AAPL</span>
-      <span>GOOGL</span>
-      <span>TSLA</span>
-      <span>GME</span>
-      <span>AMC</span>
-    </div>
+<div class="popular">
+  Popular symbols:
+  <span class="symbol">AAPL</span>
+  <span class="symbol">GOOGL</span>
+  <span class="symbol">TSLA</span>
+  <span class="symbol">INFY</span>
+</div>
+
   </div>
 
   <script>
@@ -57,6 +57,16 @@
 
   form.addEventListener("submit", function() {
     loader.style.display = "flex"; // show loader
+  });
+</script>
+<script>
+  const input = document.getElementById("stock-input");
+  const popularSymbols = document.querySelectorAll(".popular .symbol");
+
+  popularSymbols.forEach(symbol => {
+    symbol.addEventListener("click", () => {
+      input.value = symbol.innerText; // replace, don’t append
+    });
   });
 </script>
 

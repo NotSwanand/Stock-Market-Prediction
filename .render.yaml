@@ -8,4 +8,6 @@ services:
     envVars:
       - key: TWELVE_DATA_KEY
         sync: false
-    runtime: python-3.10.13
+
+env:
+  python: 3.10.13

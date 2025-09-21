@@ -17,7 +17,7 @@
   <div class="d-flex justify-content-between align-items-center mb-5">
     <div>
       <h2 class="fw-bold">Stock Prediction Dashboard</h2>
-      <p class="text-muted">AI-powered analysis for <span class="text-primary">{{ quote }}</span></p>
+      <p class="text-muted">ML-powered analysis for <span class="text-primary">{{ quote }}</span></p>
     </div>
     <a href="{{ url_for('index') }}" class="btn btn-light border btn-lg">
   Predict Another Stock
@@ -42,17 +42,17 @@
       </div>
     </div>
     <div class="col-md-3">
-      <div class="model-card lr">
-        <span>📈 Linear Regression</span>
-        <h3>${{ lr_pred }}</h3>
-        <p class="rmse">RMSE: {{ error_lr }}</p>
-      </div>
-    </div>
-    <div class="col-md-3">
       <div class="model-card xgb">
         <span>🚀 XGBoost</span>
         <h3>${{ xgb_pred | round(2) if xgb_pred is defined else "N/A" }}</h3>
         <p class="rmse">RMSE: {{ error_xgb }}</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="model-card lr">
+        <span>📈 Linear Regression</span>
+        <h3>${{ lr_pred }}</h3>
+        <p class="rmse">RMSE: {{ error_lr }}</p>
       </div>
     </div>
   </div>
@@ -93,18 +93,18 @@
         <thead>
           <tr>
             <th>Day</th>
-            <th>Linear Regression</th>
-            <th>XGBoost</th>
             <th>LSTM</th>
+            <th>XGBoost</th>
+            <th>Linear Regression</th>
           </tr>
         </thead>
         <tbody>
           {% for i in range(0, 7) %}
           <tr>
             <td>Day {{ i + 1 }}</td>
-            <td class="lr">{{ forecast_set[i] | round(2) }}</td>
-            <td class="xgb">{{ xgb_forecast[i] | round(2) }}</td>
             <td class="lstm">{{ forecast_set_lstm[i] | round(2) }}</td>
+            <td class="xgb">{{ xgb_forecast[i] | round(2) }}</td>
+            <td class="lr">{{ forecast_set[i] | round(2) }}</td>
           </tr>
           {% endfor %}
         </tbody>

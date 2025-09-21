@@ -1,28 +1,28 @@
 body {
   background: #f8fafc;
-  font-size: 1.5rem; 
+  font-size: 1rem; 
   font-family: "Inter", sans-serif;
   color: #111;
 }
 h2 {
-  font-size: 2.5rem;   /* dashboard title */
+  font-size: 2rem;   /* dashboard title */
 }
 
 h3 {
-  font-size: 2rem;     /* prediction card values */
+  font-size: 1.5rem;     /* prediction card values */
 }
 
 h4, h5 {
-  font-size: 1.5rem;   /* section titles */
+  font-size: 1.75rem;   /* section titles */
 }
 .model-card h3 {
-  font-size: 2.2rem;
+  font-size: 2rem;
 }
 .model-card .rmse {
   font-size: 1.1rem;
 }
 .table td, .table th {
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 .graph-card p {
   font-size: 1.25rem;
@@ -32,7 +32,7 @@ h4, h5 {
 
 /* Prediction cards */
 .model-card {
-  padding: 1.5rem;
+  padding: 1rem;
   border-radius: 12px;
   background: #fff;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
@@ -43,7 +43,7 @@ h4, h5 {
   margin: 1rem 0;
 }
 .model-card .rmse {
-  font-size: 1.2rem;
+  font-size: 0.75rem;
   color: #6b7280;
 }
 .model-card.arima { border-top: 4px solid #3b82f6; }
@@ -55,21 +55,21 @@ h4, h5 {
 .rec-card {
   background: #fff;
   border-radius: 12px;
-  padding: 2rem;
+  padding: 1.25rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 .badge-buy {
   background: #10b981;
   color: #fff;
-  font-size: 1.5rem;
-  padding: 1rem 1.75rem;
+  font-size: 1.25rem;
+  padding: 0.75rem 1.25rem;
   border-radius: 8px;
 }
 .badge-sell {
   background: #ef4444;
   color: #fff;
-  font-size: 1.5rem;
-  padding: 1rem 1.75rem;
+  font-size: 1.25rem;
+  padding: 0.75rem 1.25rem;
   border-radius: 8px;
 }
 
@@ -77,19 +77,19 @@ h4, h5 {
 .stock-card {
   background: #fff;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1.25rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 .stock-card h5 {
   font-weight: 600;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 /* Forecast table */
 .forecast-card {
   background: #fff;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 .table thead th {
@@ -104,7 +104,7 @@ h4, h5 {
 .graph-card {
   background: #fff;
   border-radius: 12px;
-  padding: 1rem;
+  padding: 0.5rem;
   text-align: center;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
@@ -112,7 +112,7 @@ h4, h5 {
 /* Make images larger */
 .graph-card img {
   width: 100%;          /* full width of card */
-  height: 380px;        /* slightly taller */
+  height: 300px;        /* slightly taller */
   object-fit: contain;  /* keep proportions */
   border-radius: 8px;
 }
@@ -125,3 +125,72 @@ h4, h5 {
   color: #111827;       /* darker gray/black */
 }
 
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  body {
+    font-size: 0.9rem;  /* scale down base text */
+  }
+
+  h2 {
+    font-size: 1.5rem;  /* dashboard title smaller */
+  }
+
+  h3 {
+    font-size: 1.25rem; /* prediction card values */
+  }
+
+  h4, h5 {
+    font-size: 1.25rem; /* section titles smaller */
+  }
+
+  .container-fluid {
+    padding: 1rem; /* less side padding on mobile */
+  }
+
+  /* Prediction cards: stack on smaller screens */
+  .model-card {
+    padding: 0.75rem;
+  }
+
+  .model-card h3 {
+    font-size: 1.5rem;
+  }
+
+  .model-card .rmse {
+    font-size: 0.8rem;
+  }
+
+  /* Recommendation badge smaller */
+  .badge-buy, .badge-sell {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+  }
+
+  /* Stock overview row */
+  .stock-card .col {
+    margin-bottom: 1rem; /* stack items vertically */
+  }
+
+  /* Forecast table */
+  .table td, .table th {
+    font-size: 0.85rem;
+    padding: 0.5rem;
+  }
+
+  /* Graphs */
+  .graph-card img {
+    height: 100px; /* shorter graphs on mobile */
+  }
+
+  .graph-card p {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .btn.btn-lg {
+    font-size: 0.9rem;     /* smaller text */
+    padding: 0.5rem 1rem;  /* less padding */
+    border-radius: 6px;    /* smaller corners */
+  }
+}

@@ -47,21 +47,21 @@ body {
   background: rgba(25, 25, 25, 0.1);
   backdrop-filter: blur(15px);
   border-radius: 16px;
-  padding: 5rem 6rem;
+  padding: 2rem 3rem;
   text-align: center;
-  max-width: 800px;
+  max-width: 500px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .card h1 {
-  font-size: 2.5rem;
+  font-size: 2rem;
   margin-bottom: 0.5rem;
-  font-weight: 700;
-  letter-spacing: 2px;
+  font-weight: 900;
+  letter-spacing: 0.75px;
 }
 
 .card p {
-  font-size: 1.25rem;
+  font-size: 0.75rem;
   margin-bottom: 1.5rem;
   opacity: 0.85;
 }
@@ -74,11 +74,11 @@ body {
 }
 
 .card input {
-  padding: 1.5rem;
+  padding: 0.75rem;
   border-radius: 8px;
   border: none;
   outline: none;
-  font-size: 1.75rem;
+  font-size: 1rem;
 }
 
 
@@ -91,17 +91,17 @@ input:-webkit-autofill {
 
 /* For Firefox */
 input:autofill {
-  font-size: 1.75rem !important;
+  font-size: 1.25rem !important;
 }
 
 
 .card button {
-  padding: 1.5rem;
+  padding: 0.75rem;
   background: linear-gradient(135deg, #2563eb, #3b82f6);
   border: none;
   border-radius: 8px;
   color: white;
-  font-size: 1.75rem;
+  font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
   transition: transform 0.2s ease, opacity 0.2s ease;
@@ -164,4 +164,45 @@ input:autofill {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Default (desktop/tablet) styles are fine */
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+  .card {
+    padding: 20px;
+    width: 90%;             /* shrink card width */
+    font-size: 0.9rem;      /* reduce overall font size */
+  }
+
+  h1 {
+    font-size: 1.5rem;      /* smaller heading */
+  }
+
+  p {
+    font-size: 0.95rem;     /* smaller subtitle text */
+  }
+
+  input[type="text"] {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+  button {
+    font-size: 1rem;
+    padding: 12px;
+  }
+
+  .popular {
+    margin-top: 15px;
+    font-size: 0.85rem;
+  }
+
+  .popular span {
+    display: inline-block;
+    margin: 4px 6px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
 }
