@@ -121,9 +121,9 @@ def LSTM_ALGO(df):
         y_pred = lstm_scaler.inverse_transform(y_pred_scaled).flatten()
 
         plt.figure(figsize=(18, 6), dpi=150)
-        plt.plot(df['close'].values, label='Actual Price')
+        plt.plot(df['close'].values[-100:], label='Actual Price')
         pred_x = list(range(7, 7 + len(y_pred)))
-        plt.plot(pred_x, y_pred, label='Predicted Price (LSTM)')
+        plt.plot(pred_x[-100:], y_pred[-100:], label='Predicted Price (LSTM)')
         plt.legend()
         plt.savefig('static/LSTM.png')
         plt.close()
@@ -166,8 +166,8 @@ def XGBOOST_ALGO(df):
     pred_prices = last_closes_test * (1 + pred_returns)
 
     plt.figure(figsize=(18, 6), dpi=150)
-    plt.plot(test_df['close'].values[-400:], label='Actual Price')
-    plt.plot(pred_prices[-400:], label='Predicted Price (XGB)')
+    plt.plot(test_df['close'].values[-100:], label='Actual Price')
+    plt.plot(pred_prices[-100:], label='Predicted Price (XGB)')
     plt.legend()
     plt.savefig('static/XGB.png')
     plt.close()
@@ -256,8 +256,8 @@ def LIN_REG_ALGO(df):
     error = math.sqrt(mean_squared_error(y_test, model.predict(X_test)))
 
     plt.figure(figsize=(18, 6), dpi=150)
-    plt.plot(y_test[-400:], label='Actual Price')
-    plt.plot(model.predict(X_test)[-400:], label='Predicted Price (LR)')
+    plt.plot(y_test[-100:], label='Actual Price')
+    plt.plot(model.predict(X_test)[-100:], label='Predicted Price (LR)')
     plt.legend()
     plt.savefig('static/LR.png')
     plt.close()
