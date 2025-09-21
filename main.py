@@ -17,6 +17,7 @@ from tensorflow.keras.models import load_model
 import joblib
 from dotenv import load_dotenv
 load_dotenv() 
+
 app = Flask(__name__)
 
 # =================== Load Pretrained Models ===================
@@ -35,6 +36,7 @@ except Exception as e:
     print("LSTM warm-up failed:", e)
 
 API_KEY = os.getenv("TWELVE_DATA_KEY")
+
 # =================== Utility Functions ===================
 @app.after_request
 def add_header(response):
@@ -84,7 +86,6 @@ def get_historical(quote):
 def get_current_price(symbol):
     try:
         url = f'https://api.twelvedata.com/price?symbol={symbol}&apikey={API_KEY}'
-
         data = requests.get(url).json()
         if 'price' in data:
             return round(float(data['price']), 2)
@@ -118,7 +119,6 @@ def LSTM_ALGO(df):
         X = X.reshape((X.shape[0], 7, 1))
         y_pred_scaled = lstm_model.predict(X, verbose=0)
         y_pred = lstm_scaler.inverse_transform(y_pred_scaled).flatten()
-        y_true = lstm_scaler.inverse_transform(y.reshape(-1, 1)).flatten()
 
         plt.figure(figsize=(18, 6), dpi=150)
         plt.plot(df['close'].values, label='Actual Price')
@@ -286,7 +286,12 @@ def insertintotable():
     if df.empty:
         return render_template('index.html', error=True)
 
-    arima_pred, error_arima = ARIMA_ALGO(df.copy())
+    # Only run ARIMA locally, not on Render
+    if os.getenv("RENDER"):
+        arima_pred, error_arima = 0.0, "N/A"
+    else:
+        arima_pred, error_arima = ARIMA_ALGO(df.copy())
+
     lstm_pred, error_lstm, lstm_forecast = LSTM_ALGO(df.copy())
     _, lr_pred, forecast_set, mean, error_lr = LIN_REG_ALGO(df.copy())
     _, xgb_pred, xgb_forecast, _, error_xgb = XGBOOST_ALGO(df.copy())
@@ -299,7 +304,7 @@ def insertintotable():
 
     return render_template('results.html',
         quote=quote,
-        arima_pred=round(arima_pred, 2),
+        arima_pred=round(arima_pred, 2) if error_arima != "N/A" else "N/A",
         lstm_pred=round(lstm_pred, 2),
         lr_pred=round(lr_pred, 2),
         xgb_pred=round(xgb_pred, 2),
@@ -315,7 +320,7 @@ def insertintotable():
         forecast_set_lstm=lstm_forecast,
         error_lr=format_rmse(error_lr),
         error_lstm=format_rmse(error_lstm),
-        error_arima=format_rmse(error_arima),
+        error_arima=error_arima,
         error_xgb=format_rmse(error_xgb),
         idea=idea,
         decision=decision
@@ -323,6 +328,5 @@ def insertintotable():
 
 
 if __name__ == '__main__':
-    import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)

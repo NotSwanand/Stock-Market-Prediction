@@ -26,36 +26,40 @@
   </div>
 
   <!-- Prediction Cards -->
-  <div class="row g-4 mb-5">
-    <div class="col-md-3">
-  <div class="model-card arima">
-    <span>📊 ARIMA</span>
-    <h3>${{ arima_pred }}</h3>
-    <p class="rmse">RMSE: {{ error_arima }}</p>
+<div class="row g-4 mb-5">
+  {% if error_arima != "N/A" %}
+  <div class="col-md-3">
+    <div class="model-card arima">
+      <span>📊 ARIMA</span>
+      <h3>${{ arima_pred }}</h3>
+      <p class="rmse">RMSE: {{ error_arima }}</p>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="{% if error_arima != 'N/A' %}col-md-3{% else %}col-md-4{% endif %}">
+    <div class="model-card lstm">
+      <span>🧠 LSTM</span>
+      <h3>${{ lstm_pred }}</h3>
+      <p class="rmse">RMSE: {{ error_lstm }}</p>
+    </div>
+  </div>
+  <div class="{% if error_arima != 'N/A' %}col-md-3{% else %}col-md-4{% endif %}">
+    <div class="model-card xgb">
+      <span>🚀 XGBoost</span>
+      <h3>${{ xgb_pred | round(2) if xgb_pred is defined else "N/A" }}</h3>
+      <p class="rmse">RMSE: {{ error_xgb }}</p>
+    </div>
+  </div>
+  <div class="{% if error_arima != 'N/A' %}col-md-3{% else %}col-md-4{% endif %}">
+    <div class="model-card lr">
+      <span>📈 Linear Regression</span>
+      <h3>${{ lr_pred }}</h3>
+      <p class="rmse">RMSE: {{ error_lr }}</p>
+    </div>
   </div>
 </div>
-    <div class="col-md-3">
-      <div class="model-card lstm">
-        <span>🧠 LSTM</span>
-        <h3>${{ lstm_pred }}</h3>
-        <p class="rmse">RMSE: {{ error_lstm }}</p>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="model-card xgb">
-        <span>🚀 XGBoost</span>
-        <h3>${{ xgb_pred | round(2) if xgb_pred is defined else "N/A" }}</h3>
-        <p class="rmse">RMSE: {{ error_xgb }}</p>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="model-card lr">
-        <span>📈 Linear Regression</span>
-        <h3>${{ lr_pred }}</h3>
-        <p class="rmse">RMSE: {{ error_lr }}</p>
-      </div>
-    </div>
-  </div>
+
 
   <!-- Investment Recommendation -->
   {% if idea and decision %}
@@ -114,36 +118,39 @@
   {% endif %}
 
   <!-- Graphs -->
-  <div class="mb-5">
-    <h5 class="mb-4">Model Performance Comparison</h5>
-    <div class="row g-4">
-  <div class="col-md-6 col-lg-6">
-    <div class="graph-card">
-      <img src="{{ url_for('static', filename='ARIMA.png') }}" alt="ARIMA">
-      <p>ARIMA Model</p>
+<div class="mb-5">
+  <h5 class="mb-4">Model Performance Comparison</h5>
+  <div class="row g-4">
+    {% if error_arima != "N/A" %}
+    <div class="col-md-6 col-lg-6">
+      <div class="graph-card">
+        <img src="{{ url_for('static', filename='ARIMA.png') }}" alt="ARIMA">
+        <p>ARIMA Model</p>
+      </div>
     </div>
-  </div>
-  <div class="col-md-6 col-lg-6">
-    <div class="graph-card">
-      <img src="{{ url_for('static', filename='LSTM.png') }}" alt="LSTM">
-      <p>LSTM Model</p>
+    {% endif %}
+
+    <div class="{% if error_arima != 'N/A' %}col-md-6 col-lg-6{% else %}col-md-4{% endif %}">
+      <div class="graph-card">
+        <img src="{{ url_for('static', filename='LSTM.png') }}" alt="LSTM">
+        <p>LSTM Model</p>
+      </div>
     </div>
-  </div>
-  <div class="col-md-6 col-lg-6">
-    <div class="graph-card">
-      <img src="{{ url_for('static', filename='LR.png') }}" alt="LR">
-      <p>Linear Regression</p>
+    <div class="{% if error_arima != 'N/A' %}col-md-6 col-lg-6{% else %}col-md-4{% endif %}">
+      <div class="graph-card">
+        <img src="{{ url_for('static', filename='LR.png') }}" alt="LR">
+        <p>Linear Regression</p>
+      </div>
     </div>
-  </div>
-  <div class="col-md-6 col-lg-6">
-    <div class="graph-card">
-      <img src="{{ url_for('static', filename='XGB.png') }}" alt="XGB">
-      <p>XGBoost</p>
+    <div class="{% if error_arima != 'N/A' %}col-md-6 col-lg-6{% else %}col-md-4{% endif %}">
+      <div class="graph-card">
+        <img src="{{ url_for('static', filename='XGB.png') }}" alt="XGB">
+        <p>XGBoost</p>
+      </div>
     </div>
   </div>
 </div>
 
-  </div>
 
 </div>
 </body>
