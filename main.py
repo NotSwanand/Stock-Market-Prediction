@@ -124,7 +124,7 @@ def LSTM_ALGO(df):
         y_true = lstm_scaler.inverse_transform(y.reshape(-1, 1)).flatten()
 
         # Plot last 100 aligned actual vs predicted
-        plt.figure(figsize=(18, 6), dpi=50)
+        plt.figure(figsize=(12, 4), dpi=60)
         plt.plot(y_true[-100:], label='Actual Price')
         plt.plot(y_pred[-100:], label='Predicted Price (LSTM)')
         plt.legend()
@@ -150,7 +150,7 @@ def LSTM_ALGO(df):
 
 def XGBOOST_ALGO(df):
     """Train on 2000 rows, plot last 400 test rows (old OG version, 71 features)."""
-    df = df.copy().reset_index(drop=True)
+    df = df.tail(600).reset_index(drop=True)
     df['Return'] = df['close'].pct_change()
 
     # Lag features (30 days each → 60 features)
@@ -180,7 +180,7 @@ def XGBOOST_ALGO(df):
     pred_prices = last_closes_test * (1 + pred_returns)
 
     # Plot last 100
-    plt.figure(figsize=(18, 6), dpi=50)
+    plt.figure(figsize=(12, 4), dpi=60)
     plt.plot(test_df['close'].values[-100:], label='Actual Price')
     plt.plot(pred_prices[-100:], label='Predicted Price (XGB)')
     plt.legend()
@@ -236,7 +236,7 @@ def ARIMA_ALGO(df):
     arima_pred = forecast[0]
 
     # Plot last 60 (test set) actual vs predicted
-    plt.figure(figsize=(18, 6), dpi=50)
+    plt.figure(figsize=(12, 4), dpi=60)
     plt.plot(test, label='Actual Price')
     plt.plot(predictions, label='Predicted Price (ARIMA)')
     plt.legend()
@@ -280,7 +280,7 @@ def LIN_REG_ALGO(df):
     error = math.sqrt(mean_squared_error(y_test, model.predict(X_test)))
 
     # plot only last 100 test points
-    plt.figure(figsize=(12, 4), dpi=50)
+    plt.figure(figsize=(12, 4), dpi=60)
     plt.plot(y_test[-100:], label='Actual Price')
     plt.plot(model.predict(X_test)[-100:], label='Predicted Price (LR)')
     plt.legend()
