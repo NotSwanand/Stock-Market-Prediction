@@ -76,6 +76,8 @@ def get_historical(quote):
         df['volume'] = pd.to_numeric(df['volume'], errors='coerce')
         df['adj close'] = df['close']
         df = df.dropna()
+
+        df = df.tail(600)
         return df
 
     except Exception as e:
@@ -122,7 +124,7 @@ def LSTM_ALGO(df):
         y_true = lstm_scaler.inverse_transform(y.reshape(-1, 1)).flatten()
 
         # Plot last 100 aligned actual vs predicted
-        plt.figure(figsize=(18, 6), dpi=150)
+        plt.figure(figsize=(18, 6), dpi=100)
         plt.plot(y_true[-100:], label='Actual Price')
         plt.plot(y_pred[-100:], label='Predicted Price (LSTM)')
         plt.legend()
@@ -169,7 +171,7 @@ def XGBOOST_ALGO(df):
     last_closes_test = test_df['close'].shift(1).values
     pred_prices = last_closes_test * (1 + pred_returns)
 
-    plt.figure(figsize=(18, 6), dpi=150)
+    plt.figure(figsize=(18, 6), dpi=100)
     plt.plot(test_df['close'].values[-100:], label='Actual Price')
     plt.plot(pred_prices[-100:], label='Predicted Price (XGB)')
     plt.legend()
@@ -220,7 +222,7 @@ def ARIMA_ALGO(df):
     arima_pred = forecast[0]
 
     # Plot last 60 (test set) actual vs predicted
-    plt.figure(figsize=(18, 6), dpi=150)
+    plt.figure(figsize=(18, 6), dpi=100)
     plt.plot(test, label='Actual Price')
     plt.plot(predictions, label='Predicted Price (ARIMA)')
     plt.legend()
@@ -259,7 +261,7 @@ def LIN_REG_ALGO(df):
     mean = float(forecast_set.mean())
     error = math.sqrt(mean_squared_error(y_test, model.predict(X_test)))
 
-    plt.figure(figsize=(18, 6), dpi=150)
+    plt.figure(figsize=(18, 6), dpi=100)
     plt.plot(y_test[-100:], label='Actual Price')
     plt.plot(model.predict(X_test)[-100:], label='Predicted Price (LR)')
     plt.legend()
