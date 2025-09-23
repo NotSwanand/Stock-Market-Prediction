@@ -1,10 +1,15 @@
+# main.py (Render-optimized)
+import os
+# TensorFlow threading config MUST be set before TF initializes
 import tensorflow as tf
 tf.config.threading.set_intra_op_parallelism_threads(1)
 tf.config.threading.set_inter_op_parallelism_threads(1)
+
 from flask import Flask, render_template, request, redirect, url_for
 import pandas as pd
 import numpy as np
 import matplotlib
+# Use Agg backend for headless plotting
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 plt.style.use('ggplot')
@@ -12,21 +17,32 @@ import math
 import requests
 import warnings
 warnings.filterwarnings("ignore")
-import os
-from statsmodels.tsa.arima.model import ARIMA
 from sklearn.metrics import mean_squared_error
 from sklearn.linear_model import LinearRegression
 from tensorflow.keras.models import load_model
 import joblib
 from dotenv import load_dotenv
-load_dotenv() 
+load_dotenv()
 
 app = Flask(__name__)
 
+# Detect if running on Render (set by Render automatically in environment)
+ON_RENDER = bool(os.getenv("RENDER"))
+
+# Lazy import ARIMA only when not running on Render
+ARIMA = None
+if not ON_RENDER:
+    try:
+        from statsmodels.tsa.arima.model import ARIMA
+    except Exception as e:
+        print("Could not import ARIMA (statsmodels). If you need ARIMA locally, install statsmodels. Error:", e)
+        ARIMA = None
+
 # =================== Load Pretrained Models ===================
+# Loading models is still heavy but required — keep pretrained artifacts in models/
 lstm_model = load_model("models/lstm_model.h5")
 lstm_scaler = joblib.load("models/lstm_scaler.pkl")
-lstm_rmse = joblib.load("models/lstm_rmse.pkl")   # validation RMSE from training
+lstm_rmse = joblib.load("models/lstm_rmse.pkl")
 
 xgb_model = joblib.load("models/xgb_model.pkl")
 xgb_scaler = joblib.load("models/xgb_scaler.pkl")
@@ -36,14 +52,26 @@ lr_model = joblib.load("models/lr_model.pkl")
 lr_scaler = joblib.load("models/lr_scaler.pkl")
 lr_rmse = joblib.load("models/lr_rmse.pkl")
 
-
-# Warm-up LSTM (avoid first-request delay)
+# Warm-up LSTM to reduce first-response latency
 try:
     lstm_model.predict(np.zeros((1, 7, 1)))
 except Exception as e:
     print("LSTM warm-up failed:", e)
 
 API_KEY = os.getenv("TWELVE_DATA_KEY")
+
+# ----------------- Helper to skip saving plots on Render -----------------
+def save_plot(path):
+    """
+    Save plot to disk only if NOT on Render.
+    On Render we skip saving to reduce memory/IO overhead.
+    """
+    try:
+        if not ON_RENDER:
+            plt.savefig(path)
+    finally:
+        plt.close()
+
 
 # =================== Utility Functions ===================
 @app.after_request
@@ -57,12 +85,11 @@ def add_header(response):
 def index():
     return render_template('index.html')
 
-
 def get_historical(quote):
-    """Fetches historical data from TwelveData"""
+    """Fetches historical data from TwelveData and returns last 600 rows."""
     try:
         url = f'https://api.twelvedata.com/time_series?symbol={quote}&interval=1day&outputsize=2000&apikey={API_KEY}'
-        response = requests.get(url)
+        response = requests.get(url, timeout=15)
         data = response.json()
 
         if 'values' not in data:
@@ -85,24 +112,22 @@ def get_historical(quote):
         df['adj close'] = df['close']
         df = df.dropna()
 
-        df = df.tail(600)
-        return df
+        # Trim to most recent 600 rows to limit memory and runtime
+        return df.tail(600).reset_index(drop=True)
 
     except Exception as e:
         print(f"TwelveData Error: {e}")
         return pd.DataFrame()
 
-
 def get_current_price(symbol):
     try:
         url = f'https://api.twelvedata.com/price?symbol={symbol}&apikey={API_KEY}'
-        data = requests.get(url).json()
+        data = requests.get(url, timeout=10).json()
         if 'price' in data:
             return round(float(data['price']), 2)
         return "Unavailable"
-    except:
+    except Exception:
         return "Unavailable"
-
 
 def compute_rsi(series, period=14):
     delta = series.diff()
@@ -113,8 +138,9 @@ def compute_rsi(series, period=14):
 
 
 # =================== Prediction Functions ===================
+
 def LSTM_ALGO(df):
-    """Plot last 400 days with actual vs predicted trace + 7-day forecast"""
+    """Use last 300 rows, produce small plot (saved only locally) and 7-day iterative forecast."""
     df = df.tail(300).reset_index(drop=True)
     closes = df['close'].values.reshape(-1, 1)
     scaled = lstm_scaler.transform(closes)
@@ -131,15 +157,14 @@ def LSTM_ALGO(df):
         y_pred = lstm_scaler.inverse_transform(y_pred_scaled).flatten()
         y_true = lstm_scaler.inverse_transform(y.reshape(-1, 1)).flatten()
 
-        # Plot last 100 aligned actual vs predicted
-        plt.figure(figsize=(12, 4), dpi=60)
+        # Plot last 60 aligned actual vs predicted
+        plt.figure(figsize=(10, 3), dpi=60)
         plt.plot(y_true[-60:], label='Actual Price')
         plt.plot(y_pred[-60:], label='Predicted Price (LSTM)')
         plt.legend()
-        plt.savefig('static/LSTM.png')
-        plt.close()
+        save_plot('static/LSTM.png')
 
-    # 7-day forecast
+    # 7-day iterative forecast
     last_seq = scaled[-7:].reshape((1, 7, 1))
     forecast_prices = []
     current_seq = last_seq.copy()
@@ -147,67 +172,62 @@ def LSTM_ALGO(df):
         pred_scaled = lstm_model.predict(current_seq, verbose=0)
         pred_price = lstm_scaler.inverse_transform(pred_scaled)[0][0]
         forecast_prices.append(pred_price)
-
-        # Update sequence with new predicted value
         new_seq = np.append(current_seq[0, 1:, 0], pred_scaled[0, 0])
         current_seq = new_seq.reshape((1, 7, 1))
 
     return forecast_prices[0], lstm_rmse, forecast_prices
 
 
-
 def XGBOOST_ALGO(df):
-    """Train on 2000 rows, plot last 400 test rows (old OG version, 71 features)."""
+    """
+    Recreate the feature pipeline expected by your pretrained scaler/model.
+    Use last 300 rows. Plot last 60 points (saved only locally).
+    """
     df = df.tail(300).reset_index(drop=True)
     df['Return'] = df['close'].pct_change()
 
-    # Lag features (30 days each → 60 features)
+    # Lag features (1..30)
     for lag in range(1, 31):
         df[f'lag_{lag}'] = df['close'].shift(lag)
         df[f'return_lag_{lag}'] = df['Return'].shift(lag)
 
-    # Technical indicators (5 features)
+    # Technical indicators
     df['MA7'] = df['close'].rolling(window=7).mean()
     df['MA21'] = df['close'].rolling(window=21).mean()
     df['EMA'] = df['close'].ewm(span=20, adjust=False).mean()
     df['Volatility'] = df['close'].rolling(window=7).std()
     df['RSI'] = compute_rsi(df['close'], 14)
 
-    # Drop missing rows
     df = df.dropna().reset_index(drop=True)
+    if len(df) < 50:
+        # not enough data to run model reliably
+        return df, 0.0, [], 0.0, xgb_rmse
 
-    # Train/test split
     split_idx = int(len(df) * 0.8)
     test_df = df.iloc[split_idx:]
 
-    # Features for test
     X_test = test_df.drop(columns=['date', 'adj close'], errors='ignore').values
-    scaled_X_test = xgb_scaler.transform(X_test)  # ✅ matches 71 features
+    scaled_X_test = xgb_scaler.transform(X_test)
     pred_returns = xgb_model.predict(scaled_X_test)
     last_closes_test = test_df['close'].shift(1).values
     pred_prices = last_closes_test * (1 + pred_returns)
 
-    # Plot last 100
-    plt.figure(figsize=(12, 4), dpi=60)
+    # Plot last 60 points
+    plt.figure(figsize=(10, 3), dpi=60)
     plt.plot(test_df['close'].values[-60:], label='Actual Price')
     plt.plot(pred_prices[-60:], label='Predicted Price (XGB)')
     plt.legend()
-    plt.savefig('static/XGB.png')
-    plt.close()
+    save_plot('static/XGB.png')
 
     # Iterative 7-day forecast
-    history_prices = df['close'].tolist()
-    last_close = history_prices[-1]
+    last_close = df['close'].iloc[-1]
     base_row = df.drop(columns=['date', 'adj close'], errors='ignore').iloc[-1:].copy()
     forecast_prices = []
-
     for _ in range(7):
         scaled_input = xgb_scaler.transform(base_row.values)
         pred_return = xgb_model.predict(scaled_input)[0]
         next_price = last_close * (1 + pred_return)
         forecast_prices.append(float(next_price))
-
-        # Update rolling row
         last_close = next_price
         new_row = base_row.iloc[0].copy()
         new_row['close'] = next_price
@@ -217,14 +237,13 @@ def XGBOOST_ALGO(df):
     return df, float(forecast_prices[0]), forecast_prices, float(np.mean(forecast_prices)), xgb_rmse
 
 
-
-
-
 def ARIMA_ALGO(df):
-    """ARIMA: train on 240, test on last 60, forecast 7 ahead"""
+    """ARIMA only runs locally — the import is skipped on Render."""
+    if ON_RENDER or ARIMA is None:
+        return 0.0, "N/A"
+
     df = df.tail(300).reset_index(drop=True)
     values = df['close'].values
-
     train_size = 240
     train, test = values[:train_size], values[train_size:]
 
@@ -239,23 +258,21 @@ def ARIMA_ALGO(df):
 
     rmse = math.sqrt(mean_squared_error(test, predictions)) if len(test) > 0 else 0.0
 
-    # Forecast 7 days ahead
+    # forecast 7 ahead and save plot only locally
     forecast = model_fit.forecast(steps=7)
     arima_pred = forecast[0]
 
-    # Plot last 60 (test set) actual vs predicted
-    plt.figure(figsize=(12, 4), dpi=60)
+    plt.figure(figsize=(10, 3), dpi=60)
     plt.plot(test, label='Actual Price')
     plt.plot(predictions, label='Predicted Price (ARIMA)')
     plt.legend()
-    plt.savefig("static/ARIMA.png")
-    plt.close()
+    save_plot("static/ARIMA.png")
 
     return arima_pred, rmse
 
 
 def LIN_REG_ALGO(df):
-    """Use pretrained Linear Regression for quick predictions."""
+    """Use pretrained Linear Regression to predict quickly."""
     forecast_out = 7
     df = df.tail(300).reset_index(drop=True)
 
@@ -267,28 +284,25 @@ def LIN_REG_ALGO(df):
     features = ["close", "MA7", "MA21", "Return"]
     X = df[features].values
 
-    # forecast next 7 days
+    # forecast next 7 days using pretrained LR
     forecast_set = lr_model.predict(lr_scaler.transform(df[features].tail(forecast_out)))
     lr_pred = forecast_set[0][0]
     mean = float(forecast_set.mean())
 
-    # plot last 100 actual vs predicted
+    # plot last 60 test points (saved only locally)
     split_index = int(len(X) * 0.8)
     X_test = X[split_index:]
+    # y_test must be aligned with X_test
     y_test = df["close"].shift(-forecast_out).dropna().values[split_index:]
-
-    y_pred_test = lr_model.predict(lr_scaler.transform(X_test))
-
-    plt.figure(figsize=(12, 4), dpi=60)
-    plt.plot(y_test[-60:], label="Actual Price")
-    plt.plot(y_pred_test[-60:], label="Predicted Price (LR)")
-    plt.legend()
-    plt.savefig("static/LR.png")
-    plt.close()
+    if len(y_test) > 0:
+        y_pred_test = lr_model.predict(lr_scaler.transform(X_test))
+        plt.figure(figsize=(10, 3), dpi=60)
+        plt.plot(y_test[-60:], label="Actual Price")
+        plt.plot(y_pred_test[-60:], label="Predicted Price (LR)")
+        plt.legend()
+        save_plot("static/LR.png")
 
     return df, lr_pred, forecast_set, mean, lr_rmse
-
-
 
 
 def recommending(df, _, today_stock, mean):
@@ -312,13 +326,11 @@ def insertintotable():
     if df.empty:
         return render_template('index.html', error=True)
 
-    # Only run ARIMA locally, not on Render
-    if os.getenv("RENDER"):
+    # ARIMA disabled on Render
+    if ON_RENDER:
         arima_pred, error_arima = 0.0, "N/A"
     else:
         arima_pred, error_arima = ARIMA_ALGO(df.copy())
-    
-    
 
     lstm_pred, error_lstm, lstm_forecast = LSTM_ALGO(df.copy())
     _, lr_pred, forecast_set, mean, error_lr = LIN_REG_ALGO(df.copy())
@@ -343,7 +355,7 @@ def insertintotable():
         low_s=today_stock['low'].to_string(index=False),
         vol=today_stock['volume'].to_string(index=False),
         current_price=current_price,
-        forecast_set=forecast_set.flatten().tolist(),
+        forecast_set=forecast_set.flatten().tolist() if hasattr(forecast_set, "flatten") else list(forecast_set),
         xgb_forecast=xgb_forecast,
         forecast_set_lstm=lstm_forecast,
         error_lr=format_rmse(error_lr),
