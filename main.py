@@ -124,7 +124,7 @@ def LSTM_ALGO(df):
         y_true = lstm_scaler.inverse_transform(y.reshape(-1, 1)).flatten()
 
         # Plot last 100 aligned actual vs predicted
-        plt.figure(figsize=(18, 6), dpi=100)
+        plt.figure(figsize=(18, 6), dpi=50)
         plt.plot(y_true[-100:], label='Actual Price')
         plt.plot(y_pred[-100:], label='Predicted Price (LSTM)')
         plt.legend()
@@ -149,29 +149,38 @@ def LSTM_ALGO(df):
 
 
 def XGBOOST_ALGO(df):
-    """Train on 2000 rows, plot last 400 test rows"""
+    """Train on 2000 rows, plot last 400 test rows (old OG version, 71 features)."""
     df = df.copy().reset_index(drop=True)
     df['Return'] = df['close'].pct_change()
+
+    # Lag features (30 days each → 60 features)
     for lag in range(1, 31):
         df[f'lag_{lag}'] = df['close'].shift(lag)
         df[f'return_lag_{lag}'] = df['Return'].shift(lag)
+
+    # Technical indicators (5 features)
     df['MA7'] = df['close'].rolling(window=7).mean()
     df['MA21'] = df['close'].rolling(window=21).mean()
     df['EMA'] = df['close'].ewm(span=20, adjust=False).mean()
     df['Volatility'] = df['close'].rolling(window=7).std()
     df['RSI'] = compute_rsi(df['close'], 14)
+
+    # Drop missing rows
     df = df.dropna().reset_index(drop=True)
 
+    # Train/test split
     split_idx = int(len(df) * 0.8)
     test_df = df.iloc[split_idx:]
 
+    # Features for test
     X_test = test_df.drop(columns=['date', 'adj close'], errors='ignore').values
-    scaled_X_test = xgb_scaler.transform(X_test)
+    scaled_X_test = xgb_scaler.transform(X_test)  # ✅ matches 71 features
     pred_returns = xgb_model.predict(scaled_X_test)
     last_closes_test = test_df['close'].shift(1).values
     pred_prices = last_closes_test * (1 + pred_returns)
 
-    plt.figure(figsize=(18, 6), dpi=100)
+    # Plot last 100
+    plt.figure(figsize=(18, 6), dpi=50)
     plt.plot(test_df['close'].values[-100:], label='Actual Price')
     plt.plot(pred_prices[-100:], label='Predicted Price (XGB)')
     plt.legend()
@@ -189,6 +198,8 @@ def XGBOOST_ALGO(df):
         pred_return = xgb_model.predict(scaled_input)[0]
         next_price = last_close * (1 + pred_return)
         forecast_prices.append(float(next_price))
+
+        # Update rolling row
         last_close = next_price
         new_row = base_row.iloc[0].copy()
         new_row['close'] = next_price
@@ -196,6 +207,9 @@ def XGBOOST_ALGO(df):
         base_row = pd.DataFrame([new_row])
 
     return df, float(forecast_prices[0]), forecast_prices, float(np.mean(forecast_prices)), xgb_rmse
+
+
+
 
 
 def ARIMA_ALGO(df):
@@ -222,7 +236,7 @@ def ARIMA_ALGO(df):
     arima_pred = forecast[0]
 
     # Plot last 60 (test set) actual vs predicted
-    plt.figure(figsize=(18, 6), dpi=100)
+    plt.figure(figsize=(18, 6), dpi=50)
     plt.plot(test, label='Actual Price')
     plt.plot(predictions, label='Predicted Price (ARIMA)')
     plt.legend()
@@ -233,16 +247,18 @@ def ARIMA_ALGO(df):
 
 
 def LIN_REG_ALGO(df):
-    """Train on 2000 rows, plot last 400 test rows"""
+    """Baseline Linear Regression on recent 600 rows, plot last 100 test rows"""
     from sklearn.preprocessing import StandardScaler
-    df = df.copy().reset_index(drop=True)
+    df = df.tail(600).reset_index(drop=True)   # limit rows
     forecast_out = 7
 
+    # simple moving averages + returns
     df['MA7'] = df['close'].rolling(window=7).mean()
     df['MA21'] = df['close'].rolling(window=21).mean()
     df['Return'] = df['close'].pct_change()
     df = df.dropna().reset_index(drop=True)
 
+    # target is shifted price
     df['target'] = df['close'].shift(-forecast_out)
     df = df.dropna().reset_index(drop=True)
 
@@ -254,14 +270,17 @@ def LIN_REG_ALGO(df):
 
     scaler = StandardScaler()
     X_train, X_test = scaler.fit_transform(X_train), scaler.transform(X_test)
+
     model = LinearRegression().fit(X_train, y_train)
 
+    # forecast next 7 days
     forecast_set = model.predict(scaler.transform(df[features].tail(forecast_out)))
     lr_pred = forecast_set[0][0]
     mean = float(forecast_set.mean())
     error = math.sqrt(mean_squared_error(y_test, model.predict(X_test)))
 
-    plt.figure(figsize=(18, 6), dpi=100)
+    # plot only last 100 test points
+    plt.figure(figsize=(12, 4), dpi=50)
     plt.plot(y_test[-100:], label='Actual Price')
     plt.plot(model.predict(X_test)[-100:], label='Predicted Price (LR)')
     plt.legend()
@@ -269,6 +288,7 @@ def LIN_REG_ALGO(df):
     plt.close()
 
     return df, lr_pred, forecast_set, mean, error
+
 
 
 def recommending(df, _, today_stock, mean):
