@@ -29,6 +29,11 @@ xgb_model = joblib.load("models/xgb_model.pkl")
 xgb_scaler = joblib.load("models/xgb_scaler.pkl")
 xgb_rmse = joblib.load("models/xgb_rmse.pkl")
 
+lr_model = joblib.load("models/lr_model.pkl")
+lr_scaler = joblib.load("models/lr_scaler.pkl")
+lr_rmse = joblib.load("models/lr_rmse.pkl")
+
+
 # Warm-up LSTM (avoid first-request delay)
 try:
     lstm_model.predict(np.zeros((1, 7, 1)))
@@ -107,7 +112,7 @@ def compute_rsi(series, period=14):
 # =================== Prediction Functions ===================
 def LSTM_ALGO(df):
     """Plot last 400 days with actual vs predicted trace + 7-day forecast"""
-    df = df.tail(400).reset_index(drop=True)
+    df = df.tail(300).reset_index(drop=True)
     closes = df['close'].values.reshape(-1, 1)
     scaled = lstm_scaler.transform(closes)
 
@@ -125,8 +130,8 @@ def LSTM_ALGO(df):
 
         # Plot last 100 aligned actual vs predicted
         plt.figure(figsize=(12, 4), dpi=60)
-        plt.plot(y_true[-100:], label='Actual Price')
-        plt.plot(y_pred[-100:], label='Predicted Price (LSTM)')
+        plt.plot(y_true[-60:], label='Actual Price')
+        plt.plot(y_pred[-60:], label='Predicted Price (LSTM)')
         plt.legend()
         plt.savefig('static/LSTM.png')
         plt.close()
@@ -150,7 +155,7 @@ def LSTM_ALGO(df):
 
 def XGBOOST_ALGO(df):
     """Train on 2000 rows, plot last 400 test rows (old OG version, 71 features)."""
-    df = df.tail(600).reset_index(drop=True)
+    df = df.tail(300).reset_index(drop=True)
     df['Return'] = df['close'].pct_change()
 
     # Lag features (30 days each → 60 features)
@@ -181,8 +186,8 @@ def XGBOOST_ALGO(df):
 
     # Plot last 100
     plt.figure(figsize=(12, 4), dpi=60)
-    plt.plot(test_df['close'].values[-100:], label='Actual Price')
-    plt.plot(pred_prices[-100:], label='Predicted Price (XGB)')
+    plt.plot(test_df['close'].values[-60:], label='Actual Price')
+    plt.plot(pred_prices[-60:], label='Predicted Price (XGB)')
     plt.legend()
     plt.savefig('static/XGB.png')
     plt.close()
@@ -247,47 +252,39 @@ def ARIMA_ALGO(df):
 
 
 def LIN_REG_ALGO(df):
-    """Baseline Linear Regression on recent 600 rows, plot last 100 test rows"""
-    from sklearn.preprocessing import StandardScaler
-    df = df.tail(600).reset_index(drop=True)   # limit rows
+    """Use pretrained Linear Regression for quick predictions."""
     forecast_out = 7
+    df = df.tail(300).reset_index(drop=True)
 
-    # simple moving averages + returns
-    df['MA7'] = df['close'].rolling(window=7).mean()
-    df['MA21'] = df['close'].rolling(window=21).mean()
-    df['Return'] = df['close'].pct_change()
+    df["MA7"] = df["close"].rolling(window=7).mean()
+    df["MA21"] = df["close"].rolling(window=21).mean()
+    df["Return"] = df["close"].pct_change()
     df = df.dropna().reset_index(drop=True)
 
-    # target is shifted price
-    df['target'] = df['close'].shift(-forecast_out)
-    df = df.dropna().reset_index(drop=True)
-
-    features = ['close', 'MA7', 'MA21', 'Return']
-    X, y = df[features].values, df['target'].values.reshape(-1, 1)
-    split_index = int(len(X) * 0.8)
-    X_train, X_test = X[:split_index], X[split_index:]
-    y_train, y_test = y[:split_index], y[split_index:]
-
-    scaler = StandardScaler()
-    X_train, X_test = scaler.fit_transform(X_train), scaler.transform(X_test)
-
-    model = LinearRegression().fit(X_train, y_train)
+    features = ["close", "MA7", "MA21", "Return"]
+    X = df[features].values
 
     # forecast next 7 days
-    forecast_set = model.predict(scaler.transform(df[features].tail(forecast_out)))
+    forecast_set = lr_model.predict(lr_scaler.transform(df[features].tail(forecast_out)))
     lr_pred = forecast_set[0][0]
     mean = float(forecast_set.mean())
-    error = math.sqrt(mean_squared_error(y_test, model.predict(X_test)))
 
-    # plot only last 100 test points
+    # plot last 100 actual vs predicted
+    split_index = int(len(X) * 0.8)
+    X_test = X[split_index:]
+    y_test = df["close"].shift(-forecast_out).dropna().values[split_index:]
+
+    y_pred_test = lr_model.predict(lr_scaler.transform(X_test))
+
     plt.figure(figsize=(12, 4), dpi=60)
-    plt.plot(y_test[-100:], label='Actual Price')
-    plt.plot(model.predict(X_test)[-100:], label='Predicted Price (LR)')
+    plt.plot(y_test[-60:], label="Actual Price")
+    plt.plot(y_pred_test[-60:], label="Predicted Price (LR)")
     plt.legend()
-    plt.savefig('static/LR.png')
+    plt.savefig("static/LR.png")
     plt.close()
 
-    return df, lr_pred, forecast_set, mean, error
+    return df, lr_pred, forecast_set, mean, lr_rmse
+
 
 
 
@@ -317,6 +314,8 @@ def insertintotable():
         arima_pred, error_arima = 0.0, "N/A"
     else:
         arima_pred, error_arima = ARIMA_ALGO(df.copy())
+    
+    
 
     lstm_pred, error_lstm, lstm_forecast = LSTM_ALGO(df.copy())
     _, lr_pred, forecast_set, mean, error_lr = LIN_REG_ALGO(df.copy())
