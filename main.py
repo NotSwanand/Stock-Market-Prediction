@@ -1,3 +1,6 @@
+import tensorflow as tf
+tf.config.threading.set_intra_op_parallelism_threads(1)
+tf.config.threading.set_inter_op_parallelism_threads(1)
 from flask import Flask, render_template, request, redirect, url_for
 import pandas as pd
 import numpy as np
@@ -32,10 +35,6 @@ xgb_rmse = joblib.load("models/xgb_rmse.pkl")
 lr_model = joblib.load("models/lr_model.pkl")
 lr_scaler = joblib.load("models/lr_scaler.pkl")
 lr_rmse = joblib.load("models/lr_rmse.pkl")
-
-import tensorflow as tf
-tf.config.threading.set_intra_op_parallelism_threads(1)
-tf.config.threading.set_inter_op_parallelism_threads(1)
 
 
 # Warm-up LSTM (avoid first-request delay)
