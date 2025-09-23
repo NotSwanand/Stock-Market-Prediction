@@ -104,7 +104,7 @@ def compute_rsi(series, period=14):
 
 # =================== Prediction Functions ===================
 def LSTM_ALGO(df):
-    """Plot last 400 days with continuous actual vs predicted trace + 7-day forecast"""
+    """Plot last 400 days with actual vs predicted trace + 7-day forecast"""
     df = df.tail(400).reset_index(drop=True)
     closes = df['close'].values.reshape(-1, 1)
     scaled = lstm_scaler.transform(closes)
@@ -119,11 +119,12 @@ def LSTM_ALGO(df):
         X = X.reshape((X.shape[0], 7, 1))
         y_pred_scaled = lstm_model.predict(X, verbose=0)
         y_pred = lstm_scaler.inverse_transform(y_pred_scaled).flatten()
+        y_true = lstm_scaler.inverse_transform(y.reshape(-1, 1)).flatten()
 
+        # Plot last 100 aligned actual vs predicted
         plt.figure(figsize=(18, 6), dpi=150)
-        plt.plot(df['close'].values[-100:], label='Actual Price')
-        pred_x = list(range(7, 7 + len(y_pred)))
-        plt.plot(pred_x[-100:], y_pred[-100:], label='Predicted Price (LSTM)')
+        plt.plot(y_true[-100:], label='Actual Price')
+        plt.plot(y_pred[-100:], label='Predicted Price (LSTM)')
         plt.legend()
         plt.savefig('static/LSTM.png')
         plt.close()
@@ -136,10 +137,13 @@ def LSTM_ALGO(df):
         pred_scaled = lstm_model.predict(current_seq, verbose=0)
         pred_price = lstm_scaler.inverse_transform(pred_scaled)[0][0]
         forecast_prices.append(pred_price)
+
+        # Update sequence with new predicted value
         new_seq = np.append(current_seq[0, 1:, 0], pred_scaled[0, 0])
         current_seq = new_seq.reshape((1, 7, 1))
 
     return forecast_prices[0], lstm_rmse, forecast_prices
+
 
 
 def XGBOOST_ALGO(df):

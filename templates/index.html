@@ -7,69 +7,76 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}">
 </head>
 <body>
+  <!-- Loader -->
   <div id="loader" style="display:none;">
     <div class="loader-box">
       <div class="spinner"></div>
       <p>Generating Predictions...</p>
     </div>
   </div>
-  <div class="background"></div> <!-- empty, JS will fill emojis -->
 
+  <!-- Background -->
+  <div class="background"></div>
+
+  <!-- Card -->
   <div class="card">
     <h1>STONKS PREDICTOR</h1>
-    <p>ML-powered stock forecasts with <b>LSTM, ARIMA, XGBoost & Linear Regression</b></p>
+    <p>ML-powered stock forecasts with <b>LSTM, XGBoost & Linear Regression</b></p>
 
+    <!-- Strict POST form -->
     <form action="{{ url_for('insertintotable') }}" method="POST">
-  <input type="text" id="stock-input" name="nm" placeholder="Enter Stock Symbol (AAPL, TSLA, INFY...)" required />
-  <button type="submit">Let’s Predict 🚀</button>
-</form>
+      <input type="text" id="stock-input" name="nm"
+             placeholder="Enter Stock Symbol (AAPL, TSLA, INFY...)" required />
+      <button type="submit">Let’s Predict 🚀</button>
+    </form>
 
-<div class="popular">
-  Popular symbols:
-  <span class="symbol">AAPL</span>
-  <span class="symbol">GOOGL</span>
-  <span class="symbol">TSLA</span>
-  <span class="symbol">INFY</span>
-</div>
-
+    <!-- Popular symbols -->
+    <div class="popular">
+      Popular symbols:
+      <span class="symbol">AAPL</span>
+      <span class="symbol">GOOGL</span>
+      <span class="symbol">TSLA</span>
+      <span class="symbol">INFY</span>
+    </div>
   </div>
 
+  <!-- Emoji background script -->
   <script>
-  const emojis = ["🚀","📈","📉","💸","💎","🙌","🐂","🐻","🔥","🌕","✨","🤑","📊"];
-  const bg = document.querySelector(".background");
+    const emojis = ["🚀","📈","📉","💸","💎","🙌","🐂","🐻","🔥","🌕","✨","🤑","📊"];
+    const bg = document.querySelector(".background");
+    const emojiCount = 25;
 
-  const emojiCount = 25;
+    for (let i = 0; i < emojiCount; i++) {
+      const span = document.createElement("span");
+      span.className = "emoji";
+      span.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+      span.style.top = Math.random() * 100 + "%";
+      span.style.left = Math.random() * 100 + "%";
+      span.style.animationDelay = "0s";
+      span.style.animationDuration = (10 + Math.random() * 10) + "s";
+      bg.appendChild(span);
+    }
+  </script>
 
-  for (let i = 0; i < emojiCount; i++) {
-    const span = document.createElement("span");
-    span.className = "emoji";
-    span.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-    span.style.top = Math.random() * 100 + "%";
-    span.style.left = Math.random() * 100 + "%";
-    span.style.animationDelay = "0s"; // 👈 ensures all appear instantly
-    span.style.animationDuration = (10 + Math.random() * 10) + "s"; // 👈 float speeds vary
-    bg.appendChild(span);
-  }
-</script>
-<script>
-  const form = document.querySelector("form");
-  const loader = document.getElementById("loader");
-
-  form.addEventListener("submit", function() {
-    loader.style.display = "flex"; // show loader
-  });
-</script>
-<script>
-  const input = document.getElementById("stock-input");
-  const popularSymbols = document.querySelectorAll(".popular .symbol");
-
-  popularSymbols.forEach(symbol => {
-    symbol.addEventListener("click", () => {
-      input.value = symbol.innerText; // replace, don’t append
+  <!-- Loader activation -->
+  <script>
+    const form = document.querySelector("form");
+    const loader = document.getElementById("loader");
+    form.addEventListener("submit", function() {
+      loader.style.display = "flex";
     });
-  });
-</script>
+  </script>
 
+  <!-- Popular symbol click -->
+  <script>
+    const input = document.getElementById("stock-input");
+    const popularSymbols = document.querySelectorAll(".popular .symbol");
 
+    popularSymbols.forEach(symbol => {
+      symbol.addEventListener("click", () => {
+        input.value = symbol.innerText; // replace input content
+      });
+    });
+  </script>
 </body>
 </html>
