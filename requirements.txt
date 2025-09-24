@@ -1,6 +1,6 @@
 Flask
 pandas
-numpy
+numpy<2.0
 matplotlib
 requests
 statsmodels
@@ -8,4 +8,4 @@ scikit-learn
 joblib
 python-dotenv
 gunicorn
-tensorflow==2.10.0
+tensorflow-cpu==2.10.0
