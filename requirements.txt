@@ -1,23 +1,10 @@
-# Web framework
-Flask==3.0.3
-gunicorn==23.0.0
-
-# Data & math
-numpy==1.26.4
-pandas==2.2.3
-matplotlib==3.9.2
-
-# ML / AI
-scikit-learn==1.5.2
-xgboost==2.1.1
-joblib==1.4.2
-statsmodels==0.14.4
-
-# Deep learning
-tensorflow==2.15.0
-protobuf==3.20.3
-
-
-# Utils
-requests==2.32.3
-python-dotenv==1.0.1
+Flask==2.2.5
+gunicorn==20.1.0
+requests
+pandas
+numpy
+scikit-learn
+xgboost
+joblib
+python-dotenv
+matplotlib
