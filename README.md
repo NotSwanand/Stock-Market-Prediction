@@ -95,7 +95,3 @@ Add caching layer to reduce API calls.
 
 Improve LSTM architecture for longer forecasts.
 ARIMA → Classical statistical model for autoregressive forecasting.
-
-📜 License
-
-MIT License © 2025
